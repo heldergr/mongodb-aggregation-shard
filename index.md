@@ -2,7 +2,11 @@
 
 ## Docker containers
 
-- [Referência](https://gustavo-leitao.medium.com/criando-um-cluster-mongodb-com-replicaset-e-sharding-com-docker-9cb19d456b56)
+- Resumo Docker:
+    * Rede
+    * config-servers: 3
+    * shard nodes: 6 (3 shards, cada um com uma réplica)
+    * router: 1
 
 ### Rede
 
@@ -110,18 +114,6 @@ rs.initiate(
 )
 ```
 
-#### Definindo zonas para cada shard
-
-```shell
-sh.addShardToZone("shard01", "A")
-sh.addShardToZone("shard02", "B")
-sh.addShardToZone("shard03", "C")
-
-sh.updateZoneKeyRange("teste_shard.dados4", { nomeShard: 0 }, { nomeShard: 9 }, "A")
-sh.updateZoneKeyRange("teste_shard.dados4", { nomeShard: 10 }, { nomeShard: 19 }, "B")
-sh.updateZoneKeyRange("teste_shard.dados4", { nomeShard: 20 }, { nomeShard: 29 }, "C")
-```
-
 ### Router
 
 ```shell
@@ -142,6 +134,8 @@ sh.addShard("shard03/mongo-shard3b:27020")
 
 ## Shard a collection
 
+Os comandos desta seção devem ser executados ainda no mongo-router (processo mongos).
+
 Campos do documento:
 
 - produto
@@ -152,7 +146,21 @@ Campos do documento:
 sh.enableSharding("teste_shard")
 
 sh.shardCollection(
-  "teste_shard.dados",
-  { "nomeShard" : "hashed" }
+  "teste_shard.dados4",
+  { "nomeShard" : 1 }
 )
+```
+
+### Definindo zonas para cada shard
+
+Esta parte é muito importante porque ao definir as zonas de cada shard e a faixa de valores de cada zona nós conseguimos direcionar os documentos de forma direta para cada shard.
+
+```shell
+sh.addShardToZone("shard01", "A")
+sh.addShardToZone("shard02", "B")
+sh.addShardToZone("shard03", "C")
+
+sh.updateZoneKeyRange("teste_shard.dados4", { nomeShard: 0 }, { nomeShard: 9 }, "A")
+sh.updateZoneKeyRange("teste_shard.dados4", { nomeShard: 10 }, { nomeShard: 19 }, "B")
+sh.updateZoneKeyRange("teste_shard.dados4", { nomeShard: 20 }, { nomeShard: 29 }, "C")
 ```
