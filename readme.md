@@ -180,3 +180,61 @@ sh.updateZoneKeyRange("teste_shard.dados4", { nomeShard: 20 }, { nomeShard: 29 }
 ```shell
 db.dados4.getShardDistribution()
 ```
+
+## Executando testes
+
+A execução dos testes foi feita na linguagem Python ([Notebook de exemplo](teste.ipynb)).
+Segue o código fonte:
+
+Obtendo acesso ao database:
+
+```python
+from pymongo import MongoClient
+client = MongoClient()
+db = client.teste_shard
+```
+
+Inserindo os dados:
+
+```python
+db.dados4.insert_many([
+    { 'produto': 'A', 'quantidade': 50, 'nomeShard': 5 },
+    { 'produto': 'B', 'quantidade': 40, 'nomeShard': 5 },
+    { 'produto': 'C', 'quantidade': 30, 'nomeShard': 5 },
+    { 'produto': 'F', 'quantidade': 20, 'nomeShard': 5 },
+    { 'produto': 'D', 'quantidade': 10, 'nomeShard': 5 },
+    { 'produto': 'A', 'quantidade': 50, 'nomeShard': 14 },
+    { 'produto': 'B', 'quantidade': 40, 'nomeShard': 14 },
+    { 'produto': 'F', 'quantidade': 30, 'nomeShard': 14 },
+    { 'produto': 'C', 'quantidade': 20, 'nomeShard': 14 },
+    { 'produto': 'E', 'quantidade': 10, 'nomeShard': 14 },
+    { 'produto': 'A', 'quantidade': 50, 'nomeShard': 23 },
+    { 'produto': 'E', 'quantidade': 40, 'nomeShard': 23 },
+    { 'produto': 'F', 'quantidade': 30, 'nomeShard': 23 },
+    { 'produto': 'B', 'quantidade': 20, 'nomeShard': 23 },
+    { 'produto': 'C', 'quantidade': 10, 'nomeShard': 23 }
+])
+```
+
+Testando a agregação por produto:
+
+```python
+stages = [
+    {
+        '$group': {
+            '_id': '$produto', 
+            'total': {
+                '$sum': '$quantidade'
+            }
+        }
+    }, {
+        '$sort': {
+            'total': -1
+        }
+    }, {
+        '$limit': 3
+    }
+]
+
+list(db.dados4.aggregate(stages))
+```
