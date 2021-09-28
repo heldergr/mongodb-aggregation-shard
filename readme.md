@@ -4,11 +4,11 @@ O objetivo deste trabalho foi testar o uso de agregação de dados com pipeline 
 
 ## Docker containers
 
-- Resumo Docker:
+- Resumo de uso do Docker:
     * Rede: 1
-    * config-servers: 3
-    * shard nodes: 6 (3 shards, cada um com uma réplica)
-    * router: 1
+    * config-servers: 3 containers
+    * shard nodes: 6 containers (3 shards, cada um com uma réplica)
+    * router: 1 container
 
 ### Rede
 
@@ -18,19 +18,21 @@ docker network create mongo-shard
 
 ### Config servers
 
+#### Execução
+
 ```shell
 docker run --name mongo-config01 --net mongo-shard -d mongo mongod --configsvr --replSet configserver --port 27017
 docker run --name mongo-config02 --net mongo-shard -d mongo mongod --configsvr --replSet configserver --port 27017
 docker run --name mongo-config03 --net mongo-shard -d mongo mongod --configsvr --replSet configserver --port 27017
 ```
 
-Configurando (executa em um config server qualquer, não precisa ser nos três):
+#### Configuração
+
+A configuração deve executar em apenas um config-server, não é necessário executar nos três.
 
 ```shell
 docker exec -it mongo-config01 mongo
 ```
-
-Executar:
 
 ```javascript
 rs.initiate(
@@ -49,6 +51,8 @@ rs.initiate(
 
 ### Shards
 
+#### Execução
+
 ```shell
 # 1
 docker run --name mongo-shard1a --net mongo-shard -d mongo mongod --port 27018 --shardsvr --replSet shard01
@@ -63,7 +67,9 @@ docker run --name mongo-shard3a --net mongo-shard -d mongo mongod --port 27020 -
 docker run --name mongo-shard3b --net mongo-shard -d mongo mongod --port 27020 --shardsvr --replSet shard03
 ```
 
-#### Configurar os shards (deve ser feito no shell de cada shard mas não precisa ser nas duas réplicas):
+#### Configuração
+
+A configuração dos shards deve ser feita no shell de cada um deles, mas não é necessário nas duas réplicas, apenas uma.
 
 ```shell
 docker exec -it mongo-shard1a mongo --port 27018
@@ -118,11 +124,13 @@ rs.initiate(
 
 ### Router
 
+#### Execução
+
 ```shell
 docker run -p 27017:27017 --name mongo-router --net mongo-shard -d mongo mongos --port 27017 --configdb configserver/mongo-config01:27017,mongo-config02:27017,mongo-config03:27017 --bind_ip_all
 ```
 
-Config router:
+#### Configuração
 
 ```shell
 docker exec -it mongo-router mongo
@@ -136,7 +144,7 @@ sh.addShard("shard03/mongo-shard3b:27020")
 
 ## Shard a collection
 
-Os comandos desta seção devem ser executados ainda no mongo-router (processo mongos).
+Os comandos desta seção devem ser executados ainda no shell do mongo-router, da mesma forma que os comandos do item anterior.
 
 Antes de fazer shard em uma collection é necessário habilitar sharding no database.
 
