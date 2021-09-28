@@ -202,7 +202,17 @@ db = client.teste_shard
 Inserindo os dados:
 
 ```python
-db.dados4.insert_many([
+def criar_produto(produto, nome_shard):
+    return { 'produto': produto, 'nomeShard': nome_shard }
+
+def criar_produtos(produto, quantidade, nome_shard):
+    ps = []
+    for i in range(quantidade):
+        ps.append(criar_produto(produto=produto, nome_shard=nome_shard))
+    return ps
+
+db.dados4.delete_many({})
+specs = [
     { 'produto': 'A', 'quantidade': 50, 'nomeShard': 5 },
     { 'produto': 'B', 'quantidade': 40, 'nomeShard': 5 },
     { 'produto': 'C', 'quantidade': 30, 'nomeShard': 5 },
@@ -218,7 +228,10 @@ db.dados4.insert_many([
     { 'produto': 'F', 'quantidade': 30, 'nomeShard': 23 },
     { 'produto': 'B', 'quantidade': 20, 'nomeShard': 23 },
     { 'produto': 'C', 'quantidade': 10, 'nomeShard': 23 }
-])
+]
+for sp in specs:
+    produtos = criar_produtos(sp['produto'], sp['quantidade'], sp['nomeShard'])
+    db.dados4.insert_many(produtos)
 ```
 
 Testando a agregação por produto:
@@ -229,7 +242,7 @@ stages = [
         '$group': {
             '_id': '$produto', 
             'total': {
-                '$sum': '$quantidade'
+                '$sum': 1
             }
         }
     }, {
