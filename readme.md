@@ -2,6 +2,10 @@
 
 O objetivo deste trabalho foi testar o uso de agregação de dados com pipeline em collections que são sharded. Usei Docker para subir todos os containers necessários do MongoDB e um Jupyter Notebook simples para adicionar os dados e fazer a consulta utilizando o aggregation pipeline.
 
+- [Docker containers](#docker-containers)
+- [Shard a collection](#shard-a-collection)
+- [Executando testes](#executando-testes)
+
 ## Docker containers
 
 - Resumo de uso do Docker:
@@ -183,7 +187,8 @@ db.dados4.getShardDistribution()
 
 ## Executando testes
 
-A execução dos testes foi feita na linguagem Python ([Notebook de exemplo](teste.ipynb)).
+A execução dos testes foi feita na linguagem Python ([Notebook de exemplo](teste.ipynb)). É utilizada a library *pymongo*, recomendada na documentação do MongoDB.
+
 Segue o código fonte:
 
 Obtendo acesso ao database:
