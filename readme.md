@@ -1,9 +1,11 @@
 # MongoDB - Agregação em Sharded Collection
 
+O objetivo deste trabalho foi testar o uso de agregação de dados com pipeline em collections que são sharded. Usei Docker para subir todos os containers necessários do MongoDB e um Jupyter Notebook simples para adicionar os dados e fazer a consulta utilizando o aggregation pipeline.
+
 ## Docker containers
 
 - Resumo Docker:
-    * Rede
+    * Rede: 1
     * config-servers: 3
     * shard nodes: 6 (3 shards, cada um com uma réplica)
     * router: 1
@@ -61,7 +63,7 @@ docker run --name mongo-shard3a --net mongo-shard -d mongo mongod --port 27020 -
 docker run --name mongo-shard3b --net mongo-shard -d mongo mongod --port 27020 --shardsvr --replSet shard03
 ```
 
-#### Configurar os shards (deve ser feito no shell de cada um):
+#### Configurar os shards (deve ser feito no shell de cada shard mas não precisa ser nas duas réplicas):
 
 ```shell
 docker exec -it mongo-shard1a mongo --port 27018
@@ -136,15 +138,15 @@ sh.addShard("shard03/mongo-shard3b:27020")
 
 Os comandos desta seção devem ser executados ainda no mongo-router (processo mongos).
 
-Campos do documento:
-
-- produto
-- quantidade
-- nomeShard: número cujo valor deve estar entre as faixas das zonas acima para ser direcionado para o shard específico
+Antes de fazer shard em uma collection é necessário habilitar sharding no database.
 
 ```javascript
 sh.enableSharding("teste_shard")
+```
 
+Fazendo shard na collection dados4, do database teste_shard, no campo nomeShard, por range key.
+
+```javascript
 sh.shardCollection(
   "teste_shard.dados4",
   { "nomeShard" : 1 }
@@ -163,4 +165,10 @@ sh.addShardToZone("shard03", "C")
 sh.updateZoneKeyRange("teste_shard.dados4", { nomeShard: 0 }, { nomeShard: 9 }, "A")
 sh.updateZoneKeyRange("teste_shard.dados4", { nomeShard: 10 }, { nomeShard: 19 }, "B")
 sh.updateZoneKeyRange("teste_shard.dados4", { nomeShard: 20 }, { nomeShard: 29 }, "C")
+```
+
+### Checando quantidade de documentos por shard
+
+```shell
+db.dados4.getShardDistribution()
 ```
